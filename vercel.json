@@ -1,10 +1,10 @@
-
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "marrakech": {
       "root": "artifacts/marrakech",
       "framework": "vite",
+      "outputDirectory": "dist/public",
       "rewrites": [
         {
           "source": "/(.*)",
