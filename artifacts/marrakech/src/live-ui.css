@@ -1,0 +1,79 @@
+.join-qr-card {
+  display: flex;
+  width: max-content;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 7px;
+  border: 1px solid #c7b49a;
+  background: #fbf7ef;
+  color: #634538;
+}
+.join-qr-card svg { display: block; width: 76px; height: 76px; }
+.join-qr-card span { font-size: 7px; letter-spacing: .12em; font-weight: 700; }
+.join-qr-card small { font: 8px var(--app-font-sans); letter-spacing: .08em; }
+.presenter-top .join-qr-card { flex-direction: row; gap: 9px; padding: 5px 9px; }
+.presenter-top .join-qr-card svg { width: 42px; height: 42px; }
+.presenter-top .join-qr-card span { align-self: center; }
+.participant-search { padding: 0 17px 14px; max-width: 420px; }
+.moderation-actions { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.moderation-actions .btn { min-height: 32px; padding: 0 10px; font-size: 9px; }
+.status-answered { color: #456447; }
+.reaction-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.reaction-options button {
+  display: flex; min-height: 64px; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid #d2c0a8; background: #f5eddf; color: #704638; cursor: pointer; font-size: 9px;
+}
+.reaction-options button:hover { background: #ead8be; border-color: #a77a59; }
+.reaction-options button:disabled { opacity: .55; cursor: wait; }
+.phone-activity input { width: 100%; padding: 12px; border: 1px solid #d2c0a8; background: #fffaf2; color: #573b30; font: 12px var(--app-font-sans); }
+.word-cloud-small { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+.word-cloud-small span { display: inline-flex; align-items: baseline; gap: 5px; padding: 6px 9px; background: #eee1cc; color: #714636; font: 14px var(--app-font-serif); }
+.word-cloud-small small { font: 8px var(--app-font-sans); color: #93775d; }
+.poll-result-list { display: grid; gap: 13px; margin: 17px 0; }
+.poll-result-row > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #5c4034; font-size: 11px; }
+.poll-result-row strong { font: 16px var(--app-font-serif); color: #8e503b; }
+.poll-result-track { width: 100%; height: 7px; margin-top: 6px; overflow: hidden; background: #e4d7c5; }
+.poll-result-track > span { display: block; height: 100%; background: #a45f46; transition: width .7s cubic-bezier(.2,.75,.25,1); }
+.poll-result-row small { display: block; margin-top: 4px; color: #86715e; font-size: 8px; }
+.presenter-poll-results { max-width: 650px; margin: 12px 0 0; }
+.word-cloud-stage, .projector-activity {
+  display: flex; min-height: 390px; flex-direction: column; justify-content: center; padding: clamp(24px, 5vw, 64px);
+  border: 1px solid #5b4638; background: radial-gradient(ellipse at 50% 38%, #4b3428 0%, #2e2420 68%, #251d1a 100%);
+  color: #f3e6d2; text-align: center;
+}
+.word-cloud-stage .eyebrow, .projector-activity .eyebrow { color: #d0ad73; }
+.word-cloud-stage h1, .projector-activity h1 { max-width: 880px; margin: 10px auto 32px; color: #f3e6d2; font: 44px/1.05 var(--app-font-serif); }
+.word-cloud-stage h1 em { color: #d6b77f; }
+.word-cloud-large { display: flex; min-height: 190px; flex-wrap: wrap; align-content: center; align-items: center; justify-content: center; gap: 8px 22px; }
+.word-cloud-item { font-family: var(--app-font-serif); line-height: 1; animation: cloud-arrive .6s both; }
+.cloud-tone-0 { color: #ead5af; }.cloud-tone-1 { color: #d9a679; }.cloud-tone-2 { color: #f2e8d7; }.cloud-tone-3 { color: #c98365; }
+.projector-poll-results { width: min(740px, 100%); margin: 0 auto; text-align: left; }
+.projector-poll-row { margin: 17px 0; }
+.projector-poll-row > div:first-child { display: flex; justify-content: space-between; font-size: 17px; color: #f0e4d2; }
+.projector-poll-row strong { color: #e2bd7c; font-size: 22px; }
+.projector-poll-row .poll-result-track { height: 10px; background: #59483b; }
+.projector-poll-row .poll-result-track > span { background: #d2a05e; }
+.projector-poll-wait { display: flex; align-items: center; justify-content: center; gap: 12px; color: #e1c89f; font-size: 15px; }
+.projector-quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 850px; margin: 0 auto; width: 100%; }
+.projector-quiz-options > div { display: flex; align-items: center; gap: 14px; min-height: 74px; padding: 14px; border: 1px solid #725b48; background: rgba(255,255,255,.04); text-align: left; font-size: 14px; }
+.projector-quiz-options b { display: grid; width: 31px; height: 31px; flex: none; place-items: center; border: 1px solid #c5a16e; border-radius: 50%; color: #e3c18b; font-size: 11px; }
+.projector-quiz-options span { flex: 1; }
+.projector-quiz-options .correct { border-color: #b1be85; background: rgba(141,157,95,.2); }
+.projector-quiz-options .correct svg { color: #d6e0a8; }
+.projector-reveal { max-width: 700px; margin: 22px auto 0; color: #d5c5ae; font-size: 13px; line-height: 1.7; }
+.presenter-stage { position: relative; }
+.room-reactions { position: absolute; top: 72px; right: 28px; z-index: 2; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.room-reaction { display: flex; align-items: center; gap: 9px; padding: 10px 14px; border: 1px solid #8f7055; background: rgba(40,30,25,.94); color: #f1d4a1; font-size: 12px; animation: reaction-float 2.6s ease both; }
+@keyframes cloud-arrive { from { opacity: 0; transform: translateY(12px) scale(.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes reaction-float { 0% { opacity: 0; transform: translateY(16px); } 15%, 78% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-12px); } }
+@media (max-width: 700px) {
+  .presenter-top .join-qr-card { display: none; }
+  .session-banner .join-qr-card { order: 4; }
+  .reaction-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .projector-quiz-options { grid-template-columns: 1fr; }
+  .word-cloud-stage, .projector-activity { min-height: 340px; padding: 24px 15px; }
+  .word-cloud-stage h1, .projector-activity h1 { font-size: 34px; margin-bottom: 22px; }
+  .word-cloud-item { font-size: 24px !important; }
+  .moderation-actions { grid-column: 1 / -1; }
+}

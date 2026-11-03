@@ -1,0 +1,955 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Marrakech cultural experience, presenter controls, audience participation, and quiz results
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: culture
+  - name: presentation
+  - name: audience
+  - name: polls
+  - name: quiz
+  - name: results
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Sign in as the presenter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthState"
+        "401":
+          description: Invalid credentials
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [auth]
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthState"
+  /admin/auth:
+    get:
+      operationId: getAdminAuth
+      tags: [auth]
+      responses:
+        "200":
+          description: Current presenter authentication state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthState"
+  /slides:
+    get:
+      operationId: getSlides
+      tags: [culture]
+      responses:
+        "200":
+          description: Presentation slides without private presenter notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slide"
+  /admin/slides:
+    get:
+      operationId: getAdminSlides
+      tags: [culture]
+      responses:
+        "200":
+          description: Presenter-only slides with private notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PresenterSlide"
+  /admin/slides/{slideId}:
+    patch:
+      operationId: updateSlide
+      tags: [culture]
+      parameters:
+        - $ref: "#/components/parameters/SlideId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SlideUpdate"
+      responses:
+        "200":
+          description: Updated slide including private notes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresenterSlide"
+  /admin/session:
+    get:
+      operationId: getAdminOverview
+      tags: [presentation]
+      responses:
+        "200":
+          description: Presenter dashboard overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+  /sessions:
+    post:
+      operationId: startPresentation
+      tags: [presentation]
+      responses:
+        "201":
+          description: New live presentation session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+  /sessions/{sessionCode}/state:
+    get:
+      operationId: getSessionState
+      tags: [presentation]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Public current presentation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+  /sessions/{sessionCode}/join:
+    post:
+      operationId: joinSession
+      tags: [audience]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinInput"
+      responses:
+        "200":
+          description: Joined presentation; participant access is stored in a secure cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinResult"
+  /sessions/{sessionCode}/slide:
+    patch:
+      operationId: changeSlide
+      tags: [presentation]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SlideChangeInput"
+      responses:
+        "200":
+          description: Updated presentation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+  /admin/sessions/{sessionCode}/activity:
+    post:
+      operationId: setSessionActivity
+      tags: [presentation]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionActivityInput"
+      responses:
+        "200":
+          description: Updated live session activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+  /sessions/{sessionCode}/end:
+    post:
+      operationId: endPresentation
+      tags: [presentation]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Ended presentation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+  /admin/sessions/{sessionCode}/participants:
+    get:
+      operationId: getParticipants
+      tags: [audience]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Participants and live connection states
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Participant"
+  /admin/sessions/{sessionCode}/participants/{participantId}:
+    delete:
+      operationId: removeParticipant
+      tags: [audience]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+        - name: participantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Participant removed and access invalidated
+  /admin/sessions/{sessionCode}/polls:
+    post:
+      operationId: createPoll
+      tags: [polls]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PollInput"
+      responses:
+        "201":
+          description: Open poll
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Poll"
+  /sessions/{sessionCode}/polls/active:
+    get:
+      operationId: getActivePoll
+      tags: [polls]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Active poll, if any
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivePoll"
+  /sessions/{sessionCode}/polls/{pollId}/vote:
+    post:
+      operationId: submitPollVote
+      tags: [polls]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PollVoteInput"
+      responses:
+        "200":
+          description: Vote recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollVoteResult"
+  /admin/sessions/{sessionCode}/polls/{pollId}/close:
+    post:
+      operationId: closePoll
+      tags: [polls]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Poll results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollResults"
+  /admin/sessions/{sessionCode}/polls/{pollId}/results:
+    get:
+      operationId: getPollResults
+      tags: [polls]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Presenter-only live poll aggregates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollResults"
+  /admin/quiz/questions:
+    get:
+      operationId: getQuizQuestions
+      tags: [quiz]
+      responses:
+        "200":
+          description: Quiz question bank including answer keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuizQuestion"
+    post:
+      operationId: createQuizQuestion
+      tags: [quiz]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizQuestionInput"
+      responses:
+        "201":
+          description: Created quiz question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizQuestion"
+  /admin/quiz/questions/{questionId}:
+    patch:
+      operationId: updateQuizQuestion
+      tags: [quiz]
+      parameters:
+        - name: questionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizQuestionInput"
+      responses:
+        "200":
+          description: Updated quiz question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizQuestion"
+    delete:
+      operationId: deleteQuizQuestion
+      tags: [quiz]
+      parameters:
+        - name: questionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted quiz question
+  /sessions/{sessionCode}/quiz/start:
+    post:
+      operationId: startQuiz
+      tags: [quiz]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizStartInput"
+      responses:
+        "200":
+          description: Quiz state; no answer keys
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizState"
+  /sessions/{sessionCode}/quiz/current:
+    get:
+      operationId: getCurrentQuiz
+      tags: [quiz]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Current quiz question without hidden answer key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizState"
+  /sessions/{sessionCode}/quiz/answer:
+    post:
+      operationId: submitQuizAnswer
+      tags: [quiz]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizAnswerInput"
+      responses:
+        "200":
+          description: Answer accepted and scored by the server
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizAnswerResult"
+  /admin/sessions/{sessionCode}/quiz/next:
+    post:
+      operationId: advanceQuiz
+      tags: [quiz]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Next question state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizState"
+  /admin/sessions/{sessionCode}/quiz/reveal:
+    post:
+      operationId: revealQuizAnswer
+      tags: [quiz]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: State with answer revealed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizState"
+  /admin/sessions/{sessionCode}/quiz/leaderboard/reveal:
+    post:
+      operationId: revealQuizLeaderboard
+      tags: [quiz]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Final leaderboard revealed to the audience
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizState"
+  /admin/sessions/{sessionCode}/quiz/end:
+    post:
+      operationId: endQuiz
+      tags: [quiz]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Final quiz state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizState"
+  /admin/sessions/{sessionCode}/results:
+    get:
+      operationId: getQuizResults
+      tags: [results]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Real quiz scores and per-question participant results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultsDashboard"
+  /admin/sessions/{sessionCode}/submissions:
+    get:
+      operationId: getAudienceSubmissions
+      tags: [audience]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Moderation queue for audience messages and word cloud
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AudienceSubmission"
+  /admin/sessions/{sessionCode}/submissions/{submissionId}:
+    patch:
+      operationId: moderateAudienceSubmission
+      tags: [audience]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModerationInput"
+      responses:
+        "200":
+          description: Moderated audience submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AudienceSubmission"
+  /sessions/{sessionCode}/submissions:
+    post:
+      operationId: submitAudienceContribution
+      tags: [audience]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AudienceSubmissionInput"
+      responses:
+        "201":
+          description: Contribution submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AudienceSubmission"
+  /sessions/{sessionCode}/word-cloud:
+    get:
+      operationId: getWordCloud
+      tags: [audience]
+      parameters:
+        - $ref: "#/components/parameters/SessionCode"
+      responses:
+        "200":
+          description: Approved audience words grouped for a live word cloud
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WordCloudEntry"
+components:
+  parameters:
+    SessionCode:
+      name: sessionCode
+      in: path
+      required: true
+      schema:
+        type: string
+    SlideId:
+      name: slideId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    AdminLoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 80 }
+        password: { type: string, minLength: 1, maxLength: 256 }
+    AdminAuthState:
+      type: object
+      required: [authenticated]
+      properties:
+        authenticated: { type: boolean }
+        username: { type: ["string", "null"] }
+    Slide:
+      type: object
+      required: [id, title, subtitle, content, order]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        subtitle: { type: string }
+        content: { type: string }
+        order: { type: integer }
+    PresenterSlide:
+      allOf:
+        - $ref: "#/components/schemas/Slide"
+        - type: object
+          required: [notes]
+          properties:
+            notes: { type: string }
+    SlideUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 160 }
+        subtitle: { type: string, maxLength: 240 }
+        content: { type: string, minLength: 1, maxLength: 3000 }
+        notes: { type: string, maxLength: 5000 }
+    SessionState:
+      type: object
+      required: [sessionCode, status, currentSlide, slideCount, participantCount, currentActivity]
+      properties:
+        sessionCode: { type: string }
+        status: { type: string, enum: [live, ended] }
+        currentSlide: { type: integer }
+        slideCount: { type: integer }
+        participantCount: { type: integer }
+        currentActivity: { type: ["string", "null"] }
+    JoinInput:
+      type: object
+      required: [nickname]
+      properties:
+        nickname: { type: string, minLength: 1, maxLength: 32 }
+    JoinResult:
+      type: object
+      required: [participant, state]
+      properties:
+        participant: { $ref: "#/components/schemas/Participant" }
+        state: { $ref: "#/components/schemas/SessionState" }
+    Participant:
+      type: object
+      required: [id, nickname, connected, joinedAt, score, answeredCount]
+      properties:
+        id: { type: string }
+        nickname: { type: string }
+        connected: { type: boolean }
+        joinedAt: { type: string, format: date-time }
+        score: { type: integer }
+        answeredCount: { type: integer }
+    SlideChangeInput:
+      type: object
+      required: [currentSlide]
+      properties:
+        currentSlide: { type: integer, minimum: 0 }
+    SessionActivityInput:
+      type: object
+      required: [activity]
+      properties:
+        activity:
+          type: string
+          enum:
+            [
+              presentation,
+              word-cloud,
+              word-cloud-closed,
+              poll,
+              knowledge-check,
+              quiz,
+              audience-questions,
+              audience-questions-closed,
+            ]
+    AdminOverview:
+      type: object
+      required: [activeSession, questionCount, totalSessions]
+      properties:
+        activeSession: { oneOf: [{ $ref: "#/components/schemas/SessionState" }, { type: "null" }] }
+        questionCount: { type: integer }
+        totalSessions: { type: integer }
+    PollInput:
+      type: object
+      required: [question, options]
+      properties:
+        question: { type: string, minLength: 4, maxLength: 240 }
+        options:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items: { type: string, minLength: 1, maxLength: 100 }
+    Poll:
+      type: object
+      required: [id, question, options, status, voteCount]
+      properties:
+        id: { type: string }
+        question: { type: string }
+        options: { type: array, items: { type: string } }
+        status: { type: string, enum: [open, closed] }
+        voteCount: { type: integer }
+    ActivePoll:
+      type: object
+      required: [poll, myOptionIndex]
+      properties:
+        poll: { oneOf: [{ $ref: "#/components/schemas/Poll" }, { type: "null" }] }
+        myOptionIndex: { type: ["integer", "null"] }
+        results:
+          type: array
+          items:
+            type: object
+            required: [option, count, percentage]
+            properties:
+              option: { type: string }
+              count: { type: integer }
+              percentage: { type: number }
+    PollVoteInput:
+      type: object
+      required: [optionIndex]
+      properties:
+        optionIndex: { type: integer, minimum: 0 }
+    PollVoteResult:
+      type: object
+      required: [accepted]
+      properties:
+        accepted: { type: boolean }
+    PollResults:
+      allOf:
+        - $ref: "#/components/schemas/Poll"
+        - type: object
+          required: [results]
+          properties:
+            results:
+              type: array
+              items:
+                type: object
+                required: [option, count, percentage]
+                properties:
+                  option: { type: string }
+                  count: { type: integer }
+                  percentage: { type: number }
+    QuizQuestionInput:
+      type: object
+      required: [question, options, correctIndex, explanation, points]
+      properties:
+        question: { type: string, minLength: 4, maxLength: 500 }
+        questionType: { type: string, enum: [multiple-choice, true-false], default: multiple-choice }
+        options:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items: { type: string, minLength: 1, maxLength: 240 }
+        correctIndex: { type: integer, minimum: 0 }
+        explanation: { type: string, maxLength: 1000 }
+        points: { type: integer, minimum: 1, maximum: 100 }
+    QuizQuestion:
+      allOf:
+        - $ref: "#/components/schemas/QuizQuestionInput"
+        - type: object
+          required: [id, category, questionType]
+          properties:
+            id: { type: string }
+            category: { type: string }
+            questionType: { type: string, enum: [multiple-choice, true-false] }
+    PublicQuizQuestion:
+      type: object
+      required: [id, question, questionType, options, points, questionNumber, totalQuestions, deadline]
+      properties:
+        id: { type: string }
+        question: { type: string }
+        questionType: { type: string, enum: [multiple-choice, true-false] }
+        options: { type: array, items: { type: string } }
+        points: { type: integer }
+        questionNumber: { type: integer }
+        totalQuestions: { type: integer }
+        deadline: { type: ["string", "null"], format: date-time }
+    QuizStartInput:
+      type: object
+      required: [questionIds, timeLimitSeconds]
+      properties:
+        questionIds: { type: array, minItems: 1, items: { type: string } }
+        timeLimitSeconds: { type: integer, minimum: 0, maximum: 300 }
+        activity: { type: string, enum: [quiz, knowledge-check] }
+    QuizState:
+      type: object
+      required: [status, currentQuestion, revealed, leaderboardRevealed, leaderboard, participantAnswer, serverNow]
+      properties:
+        status: { type: string, enum: [idle, live, ended] }
+        currentQuestion: { oneOf: [{ $ref: "#/components/schemas/PublicQuizQuestion" }, { type: "null" }] }
+        revealed: { type: boolean }
+        leaderboardRevealed: { type: boolean }
+        correctIndex: { type: ["integer", "null"] }
+        explanation: { type: ["string", "null"] }
+        participantAnswer:
+          oneOf:
+            - type: object
+              required: [answerIndex, submittedAt]
+              properties:
+                answerIndex: { type: integer }
+                submittedAt: { type: string, format: date-time }
+            - type: "null"
+        serverNow: { type: string, format: date-time }
+        leaderboard:
+          type: array
+          items:
+            type: object
+            required: [nickname, score, correctCount]
+            properties:
+              nickname: { type: string }
+              score: { type: integer }
+              correctCount: { type: integer }
+    QuizAnswerInput:
+      type: object
+      required: [questionId, answerIndex]
+      properties:
+        questionId: { type: string }
+        answerIndex: { type: integer, minimum: 0 }
+    QuizAnswerResult:
+      type: object
+      required: [accepted, locked]
+      properties:
+        accepted: { type: boolean }
+        locked: { type: boolean }
+    AudienceSubmissionInput:
+      type: object
+      required: [kind, content]
+      properties:
+        kind: { type: string, enum: [question, word, reaction] }
+        content: { type: string, minLength: 1, maxLength: 240 }
+    AudienceSubmission:
+      type: object
+      required: [id, nickname, kind, content, status, createdAt]
+      properties:
+        id: { type: string }
+        nickname: { type: string }
+        kind: { type: string, enum: [question, word, reaction] }
+        content: { type: string }
+        status: { type: string, enum: [pending, approved, answered, hidden] }
+        createdAt: { type: string, format: date-time }
+    ModerationInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [approved, answered, hidden] }
+    WordCloudEntry:
+      type: object
+      required: [word, count]
+      properties:
+        word: { type: string }
+        count: { type: integer }
+    ResultsDashboard:
+      type: object
+      required: [sessionCode, participants, summary, questions]
+      properties:
+        sessionCode: { type: string }
+        summary:
+          type: object
+          required: [participantCount, connectedCount, completedCount, averageScore, highestScore, lowestScore, accuracy]
+          properties:
+            participantCount: { type: integer }
+            connectedCount: { type: integer }
+            completedCount: { type: integer }
+            averageScore: { type: number }
+            highestScore: { type: integer }
+            lowestScore: { type: integer }
+            accuracy: { type: number }
+        participants:
+          type: array
+          items:
+            type: object
+            required: [id, nickname, connected, score, correctCount, incorrectCount, answeredCount, completed, accuracy, submittedAt, answers]
+            properties:
+              id: { type: string }
+              nickname: { type: string }
+              connected: { type: boolean }
+              score: { type: integer }
+              correctCount: { type: integer }
+              incorrectCount: { type: integer }
+              answeredCount: { type: integer }
+              completed: { type: boolean }
+              accuracy: { type: number }
+              submittedAt: { type: ["string", "null"], format: date-time }
+              answers:
+                type: array
+                items:
+                  type: object
+                  required: [questionId, question, selectedAnswer, selectedOption, correctIndex, isCorrect, pointsAwarded, responseTimeMs, submittedAt]
+                  properties:
+                    questionId: { type: string }
+                    question: { type: string }
+                    selectedAnswer: { type: integer }
+                    selectedOption: { type: string }
+                    correctIndex: { type: integer }
+                    isCorrect: { type: boolean }
+                    pointsAwarded: { type: integer }
+                    responseTimeMs: { type: integer }
+                    submittedAt: { type: string, format: date-time }
+        questions:
+          type: array
+          items:
+            type: object
+            required: [questionId, question, choices, correctIndex, correctCount, incorrectCount, answerCounts, correctParticipants, incorrectParticipants, unansweredParticipants]
+            properties:
+              questionId: { type: string }
+              question: { type: string }
+              choices: { type: array, items: { type: string } }
+              correctIndex: { type: integer }
+              correctCount: { type: integer }
+              incorrectCount: { type: integer }
+              answerCounts:
+                type: array
+                items:
+                  type: object
+                  required: [option, count, percentage]
+                  properties:
+                    option: { type: string }
+                    count: { type: integer }
+                    percentage: { type: number }
+              correctParticipants: { type: array, items: { type: string } }
+              incorrectParticipants: { type: array, items: { type: string } }
+              unansweredParticipants: { type: array, items: { type: string } }
+
