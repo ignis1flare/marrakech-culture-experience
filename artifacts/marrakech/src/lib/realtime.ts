@@ -24,6 +24,7 @@ async function connectToSession(
     const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || undefined;
     const socket = io(socketUrl, {
       path: '/socket.io',
+      transports: ['websocket'],
       withCredentials: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
